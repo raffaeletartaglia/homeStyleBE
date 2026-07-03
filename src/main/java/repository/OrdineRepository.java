@@ -1,0 +1,33 @@
+package repository;
+
+import com.homestyle.demo.entity.Ordine;
+import com.homestyle.demo.entity.Utente;
+import com.homestyle.demo.entity.Indirizzo;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface OrdineRepository extends JpaRepository<Ordine, UUID> {
+
+    // Trova tutti gli ordini di un utente
+    List<Ordine> findByUtente(Utente utente);
+
+    // Trova tutti gli ordini di un utente filtrando per stato
+    List<Ordine> findByUtente_IdAndStatoOrdine(UUID idUtente, Ordine.StatoOrdine statoOrdine);
+
+    // Trova tutti gli ordini con uno stato specifico
+    List<Ordine> findByStatoOrdine(Ordine.StatoOrdine statoOrdine);
+
+    // Trova tutti gli ordini con data ordine maggiore o uguale a una certa data
+    List<Ordine> findByDataOrdineAfter(LocalDateTime data);
+
+    // Trova tutti gli ordini per un certo indirizzo di spedizione
+    List<Ordine> findByIndirizzoSpedizione(Indirizzo indirizzo);
+
+    List<Ordine> findByUtente_Id(UUID utenteId);
+}//OrdineRepository
