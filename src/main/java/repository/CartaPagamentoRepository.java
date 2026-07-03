@@ -1,7 +1,6 @@
 package repository;
 
-import com.homestyle.demo.entity.CartaPagamento;
-import com.homestyle.demo.entity.Utente;
+import entity.CartaPagamento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

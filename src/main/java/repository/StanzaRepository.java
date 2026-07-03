@@ -5,8 +5,8 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.homestyle.demo.entity.AreaCasa;
-import com.homestyle.demo.entity.Stanza;
+import entity.AreaCasa;
+import entity.Stanza;
 
 import java.util.Optional;
 

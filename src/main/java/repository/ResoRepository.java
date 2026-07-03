@@ -1,8 +1,8 @@
 package repository;
 
-import com.homestyle.demo.entity.Reso;
-import com.homestyle.demo.entity.DettaglioOrdine;
-import com.homestyle.demo.entity.Indirizzo;
+import entity.Reso;
+import entity.DettaglioOrdine;
+import entity.Indirizzo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

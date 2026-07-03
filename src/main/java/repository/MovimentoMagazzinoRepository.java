@@ -1,9 +1,9 @@
 package repository;
 
-import com.homestyle.demo.entity.MovimentoMagazzino;
-import com.homestyle.demo.entity.Prodotto;
-import com.homestyle.demo.entity.Ordine;
-import com.homestyle.demo.entity.Reso;
+import entity.MovimentoMagazzino;
+import entity.Prodotto;
+import entity.Ordine;
+import entity.Reso;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

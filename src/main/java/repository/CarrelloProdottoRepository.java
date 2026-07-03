@@ -1,8 +1,9 @@
 package repository;
 
-import com.homestyle.demo.entity.CarrelloProdotto;
-import com.homestyle.demo.entity.Carrello;
-import com.homestyle.demo.entity.Prodotto;
+
+import entity.Carrello;
+import entity.CarrelloProdotto;
+import entity.Prodotto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

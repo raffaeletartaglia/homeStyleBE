@@ -1,7 +1,7 @@
 package repository;
 
-import com.homestyle.demo.entity.Spedizione;
-import com.homestyle.demo.entity.Ordine;
+import entity.Spedizione;
+import entity.Ordine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

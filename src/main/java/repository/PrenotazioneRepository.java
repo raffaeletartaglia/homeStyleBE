@@ -1,8 +1,8 @@
 package repository;
 
-import com.homestyle.demo.entity.Prenotazione;
-import com.homestyle.demo.entity.Utente;
-import com.homestyle.demo.entity.Prodotto;
+import entity.Prenotazione;
+import entity.Utente;
+import entity.Prodotto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,8 +1,8 @@
 package repository;
 
-import com.homestyle.demo.entity.Pagamento;
-import com.homestyle.demo.entity.Ordine;
-import com.homestyle.demo.entity.ModalitaPagamento;
+import entity.Pagamento;
+import entity.Ordine;
+import entity.ModalitaPagamento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

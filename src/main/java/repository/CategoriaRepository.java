@@ -1,8 +1,7 @@
 package repository;
 
 
-import com.homestyle.demo.entity.Categoria;
-import java.util.List;
+import entity.Categoria;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

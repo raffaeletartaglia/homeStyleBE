@@ -1,7 +1,7 @@
 package repository;
 
-import com.homestyle.demo.entity.Indirizzo;
-import com.homestyle.demo.entity.Utente;
+import entity.Indirizzo;
+import entity.Utente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
