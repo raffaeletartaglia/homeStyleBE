@@ -1,0 +1,24 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: homeStyleBE
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_JWK_URI}
+
+app:
+  security:
+    public-paths: /api/v1/categorie/**,/api/v1/stanza/**,/api/v1/prodotto/**,/actuator/health,/v3/api-docs/**,/swagger-ui/**

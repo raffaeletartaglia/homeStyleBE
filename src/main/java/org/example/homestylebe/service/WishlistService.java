@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.homestylebe.utils.ControlliUtils;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,23 +27,32 @@ public class WishlistService {
     private final UtenteRepository utenteRepository;
     private final ProdottoRepository prodottoRepository;
 
+    private UUID resolveUtenteId(UUID idUtente) {
+        return utenteRepository.findUtenteByKeycloakId(idUtente.toString())
+                .map(Utente::getId)
+                .orElse(idUtente);
+    }
+
     @Transactional(readOnly = true)
-    public List<Wishlist> trovaWishlistPerUtente(UUID idUtente) {
-        log.info("Cerco wishlist per utente id: {}", idUtente);
+    public Page<Wishlist> trovaWishlistPerUtente(UUID idUtente, org.springframework.data.domain.Pageable pageable) {
+        log.info("Recupero wishlist per utente id: {}", idUtente);
+
         ControlliUtils.controlloIdValido(idUtente, "utente");
 
-        List<Wishlist> wishlists = wishlistRepository.findByUtente_IdOrderByDataAggiuntaDesc(idUtente);
-        if (wishlists.isEmpty()) {
-            log.warn("Wishlist dell'utente: {}, vuota", idUtente);
+        Page<Wishlist> wishlistTrovate = wishlistRepository.findByUtente_IdOrderByDataAggiuntaDesc(idUtente, pageable);
+        if (wishlistTrovate.isEmpty()) {
+            log.warn("Nessun prodotto in wishlist trovato per utente id: {}", idUtente);
+        } else {
+            log.info("Trovati {} prodotti in wishlist per utente id: {}", wishlistTrovate.getTotalElements(), idUtente);
         }
-        log.info("Wishlist trovata con successo");
-        return wishlists;
+        return wishlistTrovate;
     }
 
     @Transactional
-    public Wishlist aggiungiAWishlist(UUID idUtente,
+    public Wishlist aggiungiAWishlist(UUID paramIdUtente,
                                       UUID idProdotto,
                                       Wishlist.Priorita priorita) {
+        final UUID idUtente = resolveUtenteId(paramIdUtente);
         log.info("Aggiunta prodotto id: {} in wishlist utente id: {}", idProdotto, idUtente);
 
         ControlliUtils.controlloIdValido(idUtente, "utente");
@@ -129,7 +139,8 @@ public class WishlistService {
     }
 
     @Transactional
-    public void svuotaWishlistPerUtente(UUID idUtente) {
+    public void svuotaWishlistPerUtente(UUID paramIdUtente) {
+        final UUID idUtente = resolveUtenteId(paramIdUtente);
         log.info("Svuotamento wishlist per utente id: {}", idUtente);
         ControlliUtils.controlloIdValido(idUtente, "utente");
 

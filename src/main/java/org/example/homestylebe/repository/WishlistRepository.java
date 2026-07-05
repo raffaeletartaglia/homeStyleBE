@@ -3,6 +3,8 @@ package org.example.homestylebe.repository;
 import org.example.homestylebe.entity.Wishlist;
 import org.example.homestylebe.entity.Utente;
 import org.example.homestylebe.entity.Prodotto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +25,9 @@ public interface WishlistRepository extends JpaRepository<Wishlist, UUID> {
     List<Wishlist> findByUtenteAndPriorita(Utente utente, Wishlist.Priorita priorita);
 
     List<Wishlist> findByUtente_IdOrderByDataAggiuntaDesc(UUID utenteId);
+
+    // Versione impaginata
+    Page<Wishlist> findByUtente_IdOrderByDataAggiuntaDesc(UUID utenteId, Pageable pageable);
 
     Optional<Wishlist> findByUtente_IdAndProdotto_Id(UUID utenteId, UUID prodottoId);
 

@@ -38,11 +38,21 @@ public class UtenteService {
         }
 
         String keycloakId = jwt.getSubject();
-        Utente utente = utenteRepo.findUtenteByKeycloakId(keycloakId).orElseThrow(
-                () -> new UtenteException(ErroreCodice.UTENTE_NON_TROVATO, "L'utente non è presente."));
-
-        log.info("Utente con keycloakId: {}, trovato", keycloakId);
-        return utente;
+        return utenteRepo.findUtenteByKeycloakId(keycloakId).orElseGet(() -> {
+            log.info("Utente non trovato nel database locale. Creazione automatica da token Keycloak.");
+            Utente nuovo = new Utente();
+            nuovo.setKeycloakId(keycloakId);
+            nuovo.setEmail(jwt.getClaimAsString("email"));
+            nuovo.setNome(jwt.getClaimAsString("given_name"));
+            nuovo.setCognome(jwt.getClaimAsString("family_name"));
+            
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(auth -> auth.equals("ROLE_ADMIN") || auth.equals("ADMIN"));
+            nuovo.setRuolo(isAdmin ? Ruolo.ADMIN : Ruolo.USER);
+            
+            return utenteRepo.save(nuovo);
+        });
     }
 
     /**

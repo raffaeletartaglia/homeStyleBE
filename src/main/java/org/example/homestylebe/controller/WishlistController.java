@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Controller REST per la gestione della "lista dei desideri" degli utenti.
@@ -22,20 +25,24 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class WishlistController {
 
-    private final WishlistService wishlistService;
     private final WishlistMapper wishlistMapper;
+    private final WishlistService wishlistService;
 
     /**
      * Recupera l'intera wishlist di un utente.
      *
      * @param idUtente L'ID dell'utente proprietario della wishlist.
-     * @return Una lista di DTO contenenti i prodotti salvati e le loro priorità.
+     * @return Una pagina di DTO contenenti i prodotti salvati e le loro priorità.
      */
     @GetMapping("/utente/{idUtente}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<List<WishlistResponseDTO>> getWishlistPerUtente(@PathVariable UUID idUtente) {
+    public ResponseEntity<Page<WishlistResponseDTO>> getWishlistPerUtente(
+            @PathVariable UUID idUtente,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(
-                wishlistMapper.toDTOs(wishlistService.trovaWishlistPerUtente(idUtente))
+                wishlistService.trovaWishlistPerUtente(idUtente, pageable).map(wishlistMapper::toDTO)
         );
     }
 
