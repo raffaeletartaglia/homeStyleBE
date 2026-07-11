@@ -8,11 +8,15 @@ import org.example.homestylebe.dto.response.WishlistResponseDTO;
 import org.example.homestylebe.entity.Wishlist;
 
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = {ProdottoMapper.class})
 public interface WishlistMapper {
+    @Mapping(source = "utente.id", target = "utenteId")
     WishlistResponseDTO toDTO(Wishlist entity);
+    
     List<WishlistResponseDTO> toDTOs(List<Wishlist> entities);
+    
     Wishlist toEntity(WishlistRequestDTO request);
     List<Wishlist> toEntities(List<WishlistRequestDTO> requests);
-
 }

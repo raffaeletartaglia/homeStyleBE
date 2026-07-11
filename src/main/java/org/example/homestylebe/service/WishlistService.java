@@ -34,108 +34,69 @@ public class WishlistService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Wishlist> trovaWishlistPerUtente(UUID idUtente, org.springframework.data.domain.Pageable pageable) {
+    public Wishlist trovaWishlistPerUtente(UUID paramIdUtente) {
+        final UUID idUtente = resolveUtenteId(paramIdUtente);
         log.info("Recupero wishlist per utente id: {}", idUtente);
-
         ControlliUtils.controlloIdValido(idUtente, "utente");
 
-        Page<Wishlist> wishlistTrovate = wishlistRepository.findByUtente_IdOrderByDataAggiuntaDesc(idUtente, pageable);
-        if (wishlistTrovate.isEmpty()) {
-            log.warn("Nessun prodotto in wishlist trovato per utente id: {}", idUtente);
-        } else {
-            log.info("Trovati {} prodotti in wishlist per utente id: {}", wishlistTrovate.getTotalElements(), idUtente);
-        }
-        return wishlistTrovate;
+        return wishlistRepository.findByUtente_Id(idUtente).orElseGet(() -> {
+            log.info("Nessuna wishlist trovata per l'utente, verrà creata dinamicamente se necessario");
+            return null; // Il controller o il service creerà la wishlist all'occorrenza
+        });
     }
 
     @Transactional
-    public Wishlist aggiungiAWishlist(UUID paramIdUtente,
-                                      UUID idProdotto,
-                                      Wishlist.Priorita priorita) {
+    public Wishlist aggiungiAWishlist(UUID paramIdUtente, UUID idProdotto) {
         final UUID idUtente = resolveUtenteId(paramIdUtente);
         log.info("Aggiunta prodotto id: {} in wishlist utente id: {}", idProdotto, idUtente);
 
         ControlliUtils.controlloIdValido(idUtente, "utente");
         ControlliUtils.controlloIdValido(idProdotto, "prodotto");
 
-        log.info("Cerco l'utente con id: {}", idUtente);
         Utente utente = utenteRepository.findById(idUtente).orElseThrow(
-                () -> {
-                    log.error("Utente con id: {}, non trovato", idUtente);
-                    return new EntitaNonTrovataException(ErroreCodice.UTENTE_NON_TROVATO);
-                }
+                () -> new EntitaNonTrovataException(ErroreCodice.UTENTE_NON_TROVATO)
         );
-        log.info("Utente con id: {}, trovato", idUtente);
 
-        log.info("Cerco prodotto con id: {}", idProdotto);
         Prodotto prodotto = prodottoRepository.findById(idProdotto).orElseThrow(
-                () -> {
-                    log.error("Prodotto con id: {}, non trovato", idProdotto);
-                    return new EntitaNonTrovataException(ErroreCodice.PRODOTTO_NON_TROVATO);
-                }
+                () -> new EntitaNonTrovataException(ErroreCodice.PRODOTTO_NON_TROVATO)
         );
-        log.info("Prodotto con id: {}, trovato", idProdotto);
 
-        log.info("Verifico se il prodotto è già in wishlist");
-        Wishlist esistente = wishlistRepository
-                .findByUtente_IdAndProdotto_Id(idUtente, idProdotto)
-                .orElse(null);
+        // Cerco o creo la wishlist per l'utente
+        Wishlist wishlist = wishlistRepository.findByUtente_Id(idUtente).orElseGet(() -> {
+            Wishlist w = new Wishlist();
+            w.setUtente(utente);
+            return w;
+        });
 
-        if (esistente != null) {
+        if (wishlist.getProdotti().contains(prodotto)) {
             log.warn("Prodotto id: {} già presente in wishlist utente id: {}", idProdotto, idUtente);
-            // opzionale: aggiorno solo la priorità se è stata passata ed è diversa
-            if (priorita != null && priorita != esistente.getPriorita()) {
-                esistente.setPriorita(priorita);
-                Wishlist salvata = wishlistRepository.save(esistente);
-                log.info("Priorità aggiornata per wishlist id: {}", salvata.getId());
-                return salvata;
-            }
-            // se non aggiorni, puoi anche decidere di lanciare un'eccezione:
-            // throw new WishlistItemGiaEsistenteException();
-            return esistente;
+            return wishlist; // Già presente, non facciamo nulla
         }
 
-        log.info("Creazione nuova wishlist");
-        Wishlist wishlist = new Wishlist();
-        wishlist.setUtente(utente);
-        wishlist.setProdotto(prodotto);
-        wishlist.setPriorita(priorita != null ? priorita : Wishlist.Priorita.MEDIA);
-
+        wishlist.getProdotti().add(prodotto);
         Wishlist salvata = wishlistRepository.save(wishlist);
-        log.info("Wishlist item creato con id: {}", salvata.getId());
+        log.info("Prodotto aggiunto alla wishlist. Elementi totali: {}", salvata.getProdotti().size());
         return salvata;
     }
 
     @Transactional
-    public Wishlist aggiornaPriorita(UUID idWishlist, Wishlist.Priorita nuovaPriorita) {
-        log.info("Aggiornamento priorità wishlist id: {} -> {}", idWishlist, nuovaPriorita);
-        ControlliUtils.controlloIdValido(idWishlist, "wishlist");
+    public Wishlist rimuoviDaWishlist(UUID paramIdUtente, UUID idProdotto) {
+        final UUID idUtente = resolveUtenteId(paramIdUtente);
+        log.info("Rimozione prodotto id: {} dalla wishlist utente id: {}", idProdotto, idUtente);
+        ControlliUtils.controlloIdValido(idUtente, "utente");
+        ControlliUtils.controlloIdValido(idProdotto, "prodotto");
 
-        Wishlist w = wishlistRepository.findById(idWishlist).orElseThrow(
-                () -> {
-                    log.error("Wishlist id: {} non trovata", idWishlist);
-                    return new EntitaNonTrovataException(ErroreCodice.WISHLIST_ITEM_NON_TROVATO);
-                }
+        Wishlist wishlist = wishlistRepository.findByUtente_Id(idUtente).orElseThrow(
+                () -> new EntitaNonTrovataException(ErroreCodice.WISHLIST_ITEM_NON_TROVATO)
         );
 
-        w.setPriorita(nuovaPriorita);
-        Wishlist salvata = wishlistRepository.save(w);
-        log.info("Wishlist id: {} aggiornata a priorità: {}", salvata.getId(), salvata.getPriorita());
-        return salvata;
-    }
-
-    @Transactional
-    public void rimuoviDaWishlist(UUID idWishlist) {
-        log.info("Rimozione elemento wishlist id: {}", idWishlist);
-        ControlliUtils.controlloIdValido(idWishlist, "wishlist");
-
-        if (!wishlistRepository.existsById(idWishlist)) {
-            log.error("Wishlist id: {} non trovata", idWishlist);
-            throw new EntitaNonTrovataException(ErroreCodice.WISHLIST_ITEM_NON_TROVATO);
+        boolean rimosso = wishlist.getProdotti().removeIf(p -> p.getId().equals(idProdotto));
+        
+        if (!rimosso) {
+            log.warn("Il prodotto {} non era presente nella wishlist dell'utente {}", idProdotto, idUtente);
         }
 
-        wishlistRepository.deleteById(idWishlist);
-        log.info("Wishlist id: {} rimossa con successo", idWishlist);
+        return wishlistRepository.save(wishlist);
     }
 
     @Transactional
@@ -144,8 +105,11 @@ public class WishlistService {
         log.info("Svuotamento wishlist per utente id: {}", idUtente);
         ControlliUtils.controlloIdValido(idUtente, "utente");
 
-        wishlistRepository.deleteByUtente_Id(idUtente);
-        log.info("Wishlist svuotata per utente id: {}", idUtente);
+        wishlistRepository.findByUtente_Id(idUtente).ifPresent(w -> {
+            w.getProdotti().clear();
+            wishlistRepository.save(w);
+            log.info("Wishlist svuotata per utente id: {}", idUtente);
+        });
     }
 }
 

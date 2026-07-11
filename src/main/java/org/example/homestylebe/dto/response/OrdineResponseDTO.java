@@ -34,6 +34,6 @@ public class OrdineResponseDTO {
 
     private List<DettaglioOrdineResponseDTO> prodotti;
     
-    
+    private List<SpedizioneResponseDTO> spedizione;
 
 }//OrdineResponseDTO

@@ -40,7 +40,7 @@ public enum ErroreCodice {
     MOVIMENTO_MAGAZZINO_NON_TROVATO("MOV_404", "Movimento magazzino non trovato", HttpStatus.NOT_FOUND),
     SPEDIZIONE_NON_TROVATA("SPED_404", "Spedizione non trovata", HttpStatus.NOT_FOUND),
     CARRELLO_PRODOTTO_NON_TROVATO("CARRPROD_404", "Prodotto nel carrello non trovato", HttpStatus.NOT_FOUND),
-    PRENOTAZIONE_NON_TROVATA("PREN_404", "Prenotazione non trovata", HttpStatus.NOT_FOUND),
+
     STANZA_NON_TROVATA("STANZA_404", "Stanza non trovata", HttpStatus.NOT_FOUND),
     CARRELLO_PRODOTTO_QUANTITA_NON_VALIDA("CARRPROD_001", "Quantità non valida per prodotto nel carrello", HttpStatus.BAD_REQUEST),
     CARRELLO_GIA_ESISTENTE_PER_UTENTE("CARR_001", "Carrello già esistente per questo utente", HttpStatus.CONFLICT),
@@ -60,7 +60,7 @@ public enum ErroreCodice {
     UTENTE_PASSWORD_NON_VALIDA("UTENTE_004", "Password non valida", HttpStatus.BAD_REQUEST),
     UTENTE_NUMERO_GIA_REGISTRATO("UTENTE_005", "Numero di telefono già registrato", HttpStatus.CONFLICT),
     UTENTE_NUMERO_TELEFONO_NON_VALIDO("UTENTE_006", "Numero di telefono non valido", HttpStatus.BAD_REQUEST),
-    PRENOTAZIONE_STATO_NON_VALIDO("PREN_001", "Stato prenotazione non valido", HttpStatus.BAD_REQUEST),
+
     ORDINE_STATO_NON_VALIDO("ORDINE_003", "Stato ordine non valido", HttpStatus.BAD_REQUEST),
     ERRORE_VALIDAZIONE("VAL_001", "Errore di validazione", HttpStatus.BAD_REQUEST),
     CARTA_PAGAMENTO_NON_VALIDA("CARTA_001", "Carta di pagamento non valida", HttpStatus.BAD_REQUEST),

@@ -64,6 +64,8 @@ public class PagamentoService {
             }
             if (pagamento.getPagamentoEffettuato() == null || !pagamento.getPagamentoEffettuato()) {
                 pagamento.setPagamentoEffettuato(true);
+            }
+            if (pagamento.getDataPagamento() == null) {
                 pagamento.setDataPagamento(LocalDateTime.now());
             }
         } else {

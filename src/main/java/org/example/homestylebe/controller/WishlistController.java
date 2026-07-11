@@ -28,80 +28,36 @@ public class WishlistController {
     private final WishlistMapper wishlistMapper;
     private final WishlistService wishlistService;
 
-    /**
-     * Recupera l'intera wishlist di un utente.
-     *
-     * @param idUtente L'ID dell'utente proprietario della wishlist.
-     * @return Una pagina di DTO contenenti i prodotti salvati e le loro priorità.
-     */
     @GetMapping("/utente/{idUtente}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<Page<WishlistResponseDTO>> getWishlistPerUtente(
-            @PathVariable UUID idUtente,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                wishlistService.trovaWishlistPerUtente(idUtente, pageable).map(wishlistMapper::toDTO)
-        );
+    public ResponseEntity<WishlistResponseDTO> getWishlistPerUtente(@PathVariable UUID idUtente) {
+        Wishlist w = wishlistService.trovaWishlistPerUtente(idUtente);
+        if (w == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(wishlistMapper.toDTO(w));
     }
 
-    /**
-     * Aggiunge un prodotto alla wishlist di un utente.
-     * Se il prodotto è già presente, la sua priorità verrà aggiornata.
-     *
-     * @param idUtente L'ID dell'utente.
-     * @param idProdotto L'ID del prodotto da desiderare.
-     * @param priorita (Opzionale) La priorità assegnata (es. ALTA, MEDIA, BASSA). Se omessa, il default è MEDIA.
-     * @return L'elemento appena inserito o aggiornato nella wishlist.
-     */
     @PostMapping("/utente/{idUtente}/prodotto/{idProdotto}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<WishlistResponseDTO> aggiungiAWishlist(
             @PathVariable UUID idUtente,
-            @PathVariable UUID idProdotto,
-            @RequestParam(required = false) Wishlist.Priorita priorita) {
+            @PathVariable UUID idProdotto) {
 
-        Wishlist wishlist = wishlistService.aggiungiAWishlist(idUtente, idProdotto, priorita);
+        Wishlist wishlist = wishlistService.aggiungiAWishlist(idUtente, idProdotto);
         return ResponseEntity.ok(wishlistMapper.toDTO(wishlist));
     }
 
-    /**
-     * Modifica la priorità di un elemento già presente nella wishlist.
-     *
-     * @param idWishlist L'ID dell'elemento nella wishlist.
-     * @param nuovaPriorita La nuova priorità desiderata.
-     * @return L'elemento della wishlist aggiornato.
-     */
-    @PutMapping("/{idWishlist}/priorita")
+    @DeleteMapping("/utente/{idUtente}/prodotto/{idProdotto}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<WishlistResponseDTO> aggiornaPriorita(
-            @PathVariable UUID idWishlist,
-            @RequestParam Wishlist.Priorita nuovaPriorita) {
-
-        Wishlist wishlist = wishlistService.aggiornaPriorita(idWishlist, nuovaPriorita);
+    public ResponseEntity<WishlistResponseDTO> rimuoviDaWishlist(
+            @PathVariable UUID idUtente,
+            @PathVariable UUID idProdotto) {
+        
+        Wishlist wishlist = wishlistService.rimuoviDaWishlist(idUtente, idProdotto);
         return ResponseEntity.ok(wishlistMapper.toDTO(wishlist));
     }
 
-    /**
-     * Rimuove un singolo elemento dalla wishlist.
-     *
-     * @param idWishlist L'ID dell'elemento da eliminare.
-     * @return Risposta vuota con status HTTP 204.
-     */
-    @DeleteMapping("/{idWishlist}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<Void> rimuoviDaWishlist(@PathVariable UUID idWishlist) {
-        wishlistService.rimuoviDaWishlist(idWishlist);
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Svuota completamente la wishlist di un utente, rimuovendo tutti i prodotti salvati.
-     *
-     * @param idUtente L'ID dell'utente.
-     * @return Risposta vuota con status HTTP 204.
-     */
     @DeleteMapping("/utente/{idUtente}/svuota")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Void> svuotaWishlistPerUtente(@PathVariable UUID idUtente) {

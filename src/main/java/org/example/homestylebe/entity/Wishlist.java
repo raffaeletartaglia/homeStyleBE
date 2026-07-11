@@ -8,42 +8,34 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "wishlist", uniqueConstraints = @UniqueConstraint(columnNames = {"utente_id","prodotto_id"}))
+@Table(name = "wishlist")
 public class Wishlist {
 
-    public enum Priorita {
-        BASSA,
-        MEDIA,
-        ALTA
-    }//Priorita
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private UUID id;
 
-    
-    @ManyToOne
-    @JoinColumn(name = "utente_id", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "utente_id", nullable = false, unique = true)
     private Utente utente;
 
-    @ManyToOne
-    @JoinColumn(name = "prodotto_id", nullable = false)
-    private Prodotto prodotto;
+    @ManyToMany
+    @JoinTable(
+        name = "wishlist_prodotti",
+        joinColumns = @JoinColumn(name = "wishlist_id"),
+        inverseJoinColumns = @JoinColumn(name = "prodotto_id")
+    )
+    private java.util.List<Prodotto> prodotti = new java.util.ArrayList<>();
 
-    
-    @Column(name = "data_aggiunta", updatable = false)
-    private LocalDateTime dataAggiunta;
+    @Column(name = "data_creazione", updatable = false)
+    private LocalDateTime dataCreazione;
     
     @PrePersist
     protected void onCreate() {
-        this.dataAggiunta = LocalDateTime.now();
+        this.dataCreazione = LocalDateTime.now();
     }
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "priorita")
-    private Priorita priorita;
-
-    
     
 }//Wishlist

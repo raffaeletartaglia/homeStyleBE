@@ -10,6 +10,8 @@ import org.example.homestylebe.entity.Reso;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ResoMapper {
+    @org.mapstruct.Mapping(source = "dettaglioOrdine.id", target = "dettaglioOrdineId")
+    @org.mapstruct.Mapping(source = "indirizzoReso.id", target = "indirizzoId")
     ResoResponseDTO toDTO(Reso entity);
     List<ResoResponseDTO> toDTOs(List<Reso> entities);
     Reso toEntity(ResoRequestDTO request);

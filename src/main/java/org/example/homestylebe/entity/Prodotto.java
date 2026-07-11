@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@ToString(exclude = {"dettagliOrdine", "carrelloProdotti", "wishlist", "prenotazioni", "movimentiMagazzino"})
+@ToString(exclude = {"dettagliOrdine", "carrelloProdotti", "wishlist", "movimentiMagazzino"})
 @EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "prodotto")
@@ -77,11 +77,8 @@ public class Prodotto {
     @OneToMany(mappedBy = "prodotto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CarrelloProdotto> carrelloProdotti = new ArrayList<>();
 
-    @OneToMany(mappedBy = "prodotto", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "prodotti")
     private List<Wishlist> wishlist = new ArrayList<>();
-
-    @OneToMany(mappedBy = "prodotto", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Prenotazione> prenotazioni = new ArrayList<>();
 
     @OneToMany(mappedBy = "prodotto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MovimentoMagazzino> movimentiMagazzino = new ArrayList<>();

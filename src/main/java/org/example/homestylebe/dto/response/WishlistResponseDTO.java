@@ -12,10 +12,8 @@ public class WishlistResponseDTO {
 
     private UUID utenteId;
 
-    private ProdottoResponseDTO prodotto;
+    private java.util.List<ProdottoResponseDTO> prodotti;
 
-    private LocalDateTime dataAggiunta;
+    private LocalDateTime dataCreazione;
 
-    private String priorita;
-
-}//WishlistResponseDTO 
+}//WishlistResponseDTO

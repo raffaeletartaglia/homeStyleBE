@@ -15,21 +15,8 @@ import java.util.UUID;
 @Repository
 public interface WishlistRepository extends JpaRepository<Wishlist, UUID> {
 
-    // Trova tutti i prodotti in wishlist di un utente
-    List<Wishlist> findByUtente(Utente utente);
-
-    // Trova un prodotto specifico nella wishlist di un utente
-    Optional<Wishlist> findByUtenteAndProdotto(Utente utente, Prodotto prodotto);
-
-    // Trova tutti i prodotti con una certa priorità per un utente
-    List<Wishlist> findByUtenteAndPriorita(Utente utente, Wishlist.Priorita priorita);
-
-    List<Wishlist> findByUtente_IdOrderByDataAggiuntaDesc(UUID utenteId);
-
-    // Versione impaginata
-    Page<Wishlist> findByUtente_IdOrderByDataAggiuntaDesc(UUID utenteId, Pageable pageable);
-
-    Optional<Wishlist> findByUtente_IdAndProdotto_Id(UUID utenteId, UUID prodottoId);
+    // Trova l'unica wishlist di un utente
+    Optional<Wishlist> findByUtente_Id(UUID utenteId);
 
     void deleteByUtente_Id(UUID utenteId);
     

@@ -98,6 +98,30 @@ public class ResoService {
             throw new ResoGiaEsistenteException();
         }
 
+        // 2b. L'ordine è stato consegnato?
+        if (dettaglio.getOrdine().getStatoOrdine() != org.example.homestylebe.entity.Ordine.StatoOrdine.CONSEGNATO) {
+            log.error("Impossibile creare reso per ordine non consegnato: {}", dettaglio.getOrdine().getId());
+            throw new OperazioneNonConsentitaException(
+                    "Impossibile richiedere un reso per un ordine non ancora consegnato.", 
+                    ErroreCodice.ERRORE_VALIDAZIONE);
+        }
+
+        // 2c. L'orario di ritiro è valido?
+        if (oraRitiroReso.isBefore(LocalTime.of(9, 0)) || oraRitiroReso.isAfter(LocalTime.of(13, 0))) {
+            log.error("Orario di ritiro non valido: {}", oraRitiroReso);
+            throw new OperazioneNonConsentitaException(
+                    "L'orario di ritiro deve essere compreso tra le 09:00 e le 13:00.", 
+                    ErroreCodice.ERRORE_VALIDAZIONE);
+        }
+
+        // 2d. La data di ritiro è valida? (Non nel passato e successiva all'ordine)
+        if (dataResoPrevista.isBefore(LocalDate.now()) || dataResoPrevista.isBefore(dettaglio.getOrdine().getDataOrdine().toLocalDate())) {
+            log.error("Data di ritiro non valida: {}", dataResoPrevista);
+            throw new OperazioneNonConsentitaException(
+                    "La data di ritiro prevista non può essere antecedente alla data odierna o alla data dell'ordine.", 
+                    ErroreCodice.ERRORE_VALIDAZIONE);
+        }
+
         // 3. Indirizzo reso
         Indirizzo indirizzo = indirizzoRepository.findById(idIndirizzoReso)
                 .orElseThrow(() -> {
@@ -112,7 +136,7 @@ public class ResoService {
         reso.setDataResoPrevista(dataResoPrevista);
         reso.setOraRitiroReso(oraRitiroReso);
         reso.setMotivo(motivo);
-        reso.setStatoReso(Reso.StatoReso.IN_PREPARAZIONE); // se vuoi uno stato iniziale
+        reso.setStatoReso(Reso.StatoReso.RICHIESTO); 
 
         Reso salvato = resoRepository.save(reso);
         log.info("Reso creato con successo, id: {}", salvato.getId());
@@ -153,12 +177,12 @@ public class ResoService {
                 }
         );
 
-        // Non puoi annullare un reso già annullato o già ritirato
-        if (reso.getStatoReso() == Reso.StatoReso.ANNULLATO || reso.getStatoReso() == Reso.StatoReso.RITIRATO) {
+        // Non puoi annullare un reso già annullato o processato
+        if (reso.getStatoReso() == Reso.StatoReso.ANNULLATO || reso.getStatoReso() == Reso.StatoReso.ACCETTATO || reso.getStatoReso() == Reso.StatoReso.RIFIUTATO) {
             log.error("Impossibile annullare reso id: {} con stato: {}", idReso, reso.getStatoReso());
             throw new OperazioneNonConsentitaException(
                     "Impossibile annullare un reso già " + reso.getStatoReso(),
-                    ErroreCodice.PRENOTAZIONE_STATO_NON_VALIDO);
+                    ErroreCodice.OPERAZIONE_NON_CONSENTITA);
         }
 
         reso.setStatoReso(Reso.StatoReso.ANNULLATO);
@@ -179,18 +203,18 @@ public class ResoService {
                 }
         );
 
-        if (reso.getStatoReso() == Reso.StatoReso.ANNULLATO || reso.getStatoReso() == Reso.StatoReso.RITIRATO) {
+        if (reso.getStatoReso() == Reso.StatoReso.ANNULLATO || reso.getStatoReso() == Reso.StatoReso.ACCETTATO || reso.getStatoReso() == Reso.StatoReso.RIFIUTATO) {
             log.error("Impossibile modificare un reso già chiuso con stato: {}", reso.getStatoReso());
             throw new OperazioneNonConsentitaException(
                     "Impossibile modificare un reso già " + reso.getStatoReso(),
-                    ErroreCodice.PRENOTAZIONE_STATO_NON_VALIDO);
+                    ErroreCodice.OPERAZIONE_NON_CONSENTITA);
         }
 
         reso.setStatoReso(nuovoStato);
 
-        // Automazione RITIRATO: Reintegro Magazzino + Rimborso Pagamento
-        if (nuovoStato == Reso.StatoReso.RITIRATO) {
-            log.info("Avvio procedura automatica di magazzino e rimborso per reso id: {}", idReso);
+        // Automazione ACCETTATO: Reintegro Magazzino + Rimborso Pagamento
+        if (nuovoStato == Reso.StatoReso.ACCETTATO) {
+            log.info("Avvio procedura automatica di magazzino e rimborso per reso accettato id: {}", idReso);
             
             DettaglioOrdine dettaglio = reso.getDettaglioOrdine();
             Prodotto prodotto = dettaglio.getProdotto();
@@ -208,9 +232,9 @@ public class ResoService {
             movimento.setQuantita(quantitaResa);
             movimento.setReso(reso);
             movimento.setOrdine(dettaglio.getOrdine());
-            movimento.setNote("Rientro automatico per reso ritirato");
+            movimento.setNote("Rientro automatico per reso accettato");
             movimentoMagazzinoRepository.save(movimento);
-            log.info("Creato movimento di magazzino per reso ritirato");
+            log.info("Creato movimento di magazzino per reso accettato");
 
             // 3. Esegui rimborso (Pagamento)
             pagamentoRepository.findByOrdine(dettaglio.getOrdine()).ifPresent(pagamento -> {

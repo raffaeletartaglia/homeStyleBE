@@ -10,6 +10,8 @@ import org.example.homestylebe.entity.DettaglioOrdine;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface DettaglioOrdineMapper {
+    @org.mapstruct.Mapping(source = "reso.id", target = "resoId")
+    @org.mapstruct.Mapping(source = "reso.statoReso", target = "statoReso")
     DettaglioOrdineResponseDTO toDTO(DettaglioOrdine entity);
     List<DettaglioOrdineResponseDTO> toDTOs(List<DettaglioOrdine> entities);
     DettaglioOrdine toEntity(DettaglioOrdineRequestDTO request);

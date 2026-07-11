@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@ToString(exclude = { "ordini", "carrello", "recensioni", "wishlist", "prenotazioni", "cartePagamento", "indirizzi" })
+@ToString(exclude = { "ordini", "carrello", "recensioni", "wishlist", "cartePagamento", "indirizzi" })
 @EqualsAndHashCode(of = "id")
 @Entity
 @Table(name = "utente")
@@ -70,13 +70,9 @@ public class Utente {
 	@OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Recensione> recensioni = new ArrayList<>();
 
-	// Utente _>WishList(1:n)
-	@OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Wishlist> wishlist = new ArrayList<>();
-
-	// Utente->Prenotazione(1:n)
-	@OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<Prenotazione> prenotazioni = new ArrayList<>();
+	// Utente _>WishList(1:1)
+	@OneToOne(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Wishlist wishlist;
 
 	// UTENTE->Carte Pagamento(1:n)
 	@OneToMany(mappedBy = "utente", cascade = CascadeType.ALL, orphanRemoval = true)

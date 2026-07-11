@@ -23,10 +23,9 @@ public class Reso {
 
     public enum StatoReso {
         RICHIESTO,
-        PROGRAMMATO,
-        RITIRATO,
-        ANNULLATO,
-        IN_PREPARAZIONE
+        ACCETTATO,
+        RIFIUTATO,
+        ANNULLATO
     }
 
     @Id
