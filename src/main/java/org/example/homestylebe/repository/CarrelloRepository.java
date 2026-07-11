@@ -14,8 +14,5 @@ public interface CarrelloRepository extends JpaRepository<Carrello, UUID> {
     // Trova il carrello di un utente
     Optional<Carrello> findByUtente_Id(UUID idUtente);
 
-    Optional<Carrello> findByUtente_IdAndStato(UUID utente_id, Carrello.Stato stato);
-
-
-    boolean existsByUtente_IdAndStato(UUID idUtente, Carrello.Stato stato);
+    boolean existsByUtente_Id(UUID idUtente);
 }//CarrelloRepository

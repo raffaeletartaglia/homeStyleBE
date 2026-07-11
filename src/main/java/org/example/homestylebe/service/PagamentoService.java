@@ -15,7 +15,6 @@ import org.example.homestylebe.utils.ControlliUtils;
 import org.example.homestylebe.exception.*;
 
 import org.example.homestylebe.repository.CartaPagamentoRepository;
-import org.example.homestylebe.repository.ModalitaPagamentoRepository;
 import org.example.homestylebe.repository.OrdineRepository;
 import org.example.homestylebe.repository.PagamentoRepository;
 
@@ -23,7 +22,6 @@ import org.example.homestylebe.entity.CartaPagamento;
 import org.example.homestylebe.entity.Ordine;
 import org.example.homestylebe.entity.Pagamento;
 import org.example.homestylebe.entity.Prodotto;
-import org.example.homestylebe.entity.ModalitaPagamento;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +30,6 @@ public class PagamentoService {
 
     private final PagamentoRepository pagamentoRepo;
     private final OrdineRepository ordineRepo;
-    private final ModalitaPagamentoRepository modalitaPagamentoRepo;
     private final CartaPagamentoRepository cartaPagamentoRepo;
 
     public Pagamento creaPagamento(Pagamento pagamento) {
@@ -49,97 +46,41 @@ public class PagamentoService {
         pagamento.setOrdine(ordine);
         log.info("Ordine trovato e associato al pagamento: {}", ordine.getId());
 
-        // MODALITA PAGAMENTO
-        if (pagamento.getModalitaPagamento() == null || pagamento.getModalitaPagamento().getId() == null) {
-            log.info("Nessuna Modalita Pagamento passata, cerco o creo la modalita di default ONLINE");
-            ModalitaPagamento modOnline = modalitaPagamentoRepo.findByTipo(ModalitaPagamento.Tipo.ONLINE)
-                    .stream().findFirst()
-                    .orElseGet(() -> {
-                        log.info("Modalita ONLINE non trovata, la creo");
-                        ModalitaPagamento nuova = new ModalitaPagamento();
-                        nuova.setTipo(ModalitaPagamento.Tipo.ONLINE);
-                        nuova.setDescrizione("Pagamento Online");
-                        return modalitaPagamentoRepo.save(nuova);
-                    });
-            pagamento.setModalitaPagamento(modOnline);
-            log.info("Modalita pagamento associata automaticamente: {}", modOnline.getId());
+        // PAGAMENTO ONLINE
+        if (Boolean.TRUE.equals(pagamento.getPagamentoOnline())) {
+            // CARTA PAGAMENTO
+            if (pagamento.getCartaPagamento() != null && pagamento.getCartaPagamento().getId() != null) {
+                ControlliUtils.controlloIdValido(pagamento.getCartaPagamento().getId(), "Carta Pagamento");
+                log.info("Id carta pagamento valido: {}", pagamento.getCartaPagamento().getId());
+
+                CartaPagamento cartaPagamento = cartaPagamentoRepo
+                        .findById(pagamento.getCartaPagamento().getId())
+                        .orElseThrow(() -> new EntitaNonTrovataException(ErroreCodice.CARTA_PAGAMENTO_NON_TROVATA));
+
+                pagamento.setCartaPagamento(cartaPagamento);
+                log.info("Carta pagamento trovata e associata: {}", cartaPagamento.getId());
+            } else {
+                throw new ValoreNonValidoException("Carta pagamento obbligatoria per pagamento online", ErroreCodice.PAGAMENTO_IMPORTO_NON_VALIDO);
+            }
+            if (pagamento.getPagamentoEffettuato() == null || !pagamento.getPagamentoEffettuato()) {
+                pagamento.setPagamentoEffettuato(true);
+                pagamento.setDataPagamento(LocalDateTime.now());
+            }
         } else {
-            ControlliUtils.controlloIdValido(pagamento.getModalitaPagamento().getId(), "Modalita Pagamento");
-            log.info("Id modalita pagamento valido: {}", pagamento.getModalitaPagamento().getId());
-
-            ModalitaPagamento modalitaPagamento = modalitaPagamentoRepo
-                    .findById(pagamento.getModalitaPagamento().getId())
-                    .orElseThrow(() -> new EntitaNonTrovataException(ErroreCodice.MODALITA_PAGAMENTO_NON_TROVATA));
-
-            pagamento.setModalitaPagamento(modalitaPagamento);
-            log.info("Modalita pagamento trovata e associata: {}", modalitaPagamento.getId());
-        }
-
-        // CARTA PAGAMENTO (opzionale)
-        if (pagamento.getCartaPagamento() != null && pagamento.getCartaPagamento().getId() != null) {
-
-            ControlliUtils.controlloIdValido(pagamento.getCartaPagamento().getId(), "Carta Pagamento");
-            log.info("Id carta pagamento valido: {}", pagamento.getCartaPagamento().getId());
-
-            CartaPagamento cartaPagamento = cartaPagamentoRepo
-                    .findById(pagamento.getCartaPagamento().getId())
-                    .orElseThrow(() -> new EntitaNonTrovataException(ErroreCodice.CARTA_PAGAMENTO_NON_TROVATA));
-
-            pagamento.setCartaPagamento(cartaPagamento);
-            log.info("Carta pagamento trovata e associata: {}", cartaPagamento.getId());
-        }
-
-        // DEFAULT VALUES SE NON PASSATI
-        if (pagamento.getNumeroRate() == null) {
-            pagamento.setNumeroRate(1);
-        }
-        if (pagamento.getRataCorrente() == null) {
-            pagamento.setRataCorrente(1);
-        }
-        if (pagamento.getImportoRata() == null) {
-            pagamento.setImportoRata(pagamento.getImporto());
-        }
-        if (pagamento.getPagamentoEffettuato() == null) {
-            pagamento.setPagamentoEffettuato(false);
+            // PAGAMENTO ALLA CONSEGNA
+            pagamento.setPagamentoOnline(false);
+            pagamento.setCartaPagamento(null);
+            if (pagamento.getPagamentoEffettuato() == null) {
+                pagamento.setPagamentoEffettuato(false);
+            }
         }
 
         // VALIDAZIONI CAMPI
-        if (!controlloNumeroRate(pagamento.getNumeroRate())) {
-            log.error("Numero rate non valido: {}", pagamento.getNumeroRate());
-            throw new ValoreNonValidoException(
-                    "Numero rate non valido",
-                    ErroreCodice.PAGAMENTO_IMPORTO_NON_VALIDO
-            );
-        }
-
-        if (!controlloRataCorrente(pagamento.getRataCorrente())) {
-            log.error("Rata corrente non valida: {}", pagamento.getRataCorrente());
-            throw new ValoreNonValidoException(
-                    "Rata corrente non valida",
-                    ErroreCodice.PAGAMENTO_IMPORTO_NON_VALIDO
-            );
-        }
-
-        if (!controlloRataCorrenteVsNumeroRate(pagamento.getRataCorrente(), pagamento.getNumeroRate())) {
-            log.error("Rata corrente maggiore del numero di rate");
-            throw new ValoreNonValidoException(
-                    "Rata corrente non può essere maggiore del numero di rate",
-                    ErroreCodice.PAGAMENTO_IMPORTO_NON_VALIDO
-            );
-        }
 
         if (!controlloImporto(pagamento.getImporto())) {
             log.error("Importo pagamento non valido: {}", pagamento.getImporto());
             throw new ValoreNonValidoException(
                     "Importo pagamento non valido",
-                    ErroreCodice.PAGAMENTO_IMPORTO_NON_VALIDO
-            );
-        }
-
-        if (!controlloImportoRata(pagamento.getImportoRata())) {
-            log.error("Importo rata non valido: {}", pagamento.getImportoRata());
-            throw new ValoreNonValidoException(
-                    "Importo rata non valido",
                     ErroreCodice.PAGAMENTO_IMPORTO_NON_VALIDO
             );
         }
@@ -218,7 +159,6 @@ public class PagamentoService {
 
         pagamento.setPagamentoEffettuato(false);
         pagamento.setDataPagamento(null);
-        pagamento.setRataCorrente(1);
         pagamento.setFattura(null);
 
         Pagamento pagamentoAggiornato = pagamentoRepo.save(pagamento);
@@ -246,7 +186,6 @@ public class PagamentoService {
 
         pagamento.setPagamentoEffettuato(true);
         pagamento.setDataPagamento(LocalDateTime.now());
-        pagamento.setRataCorrente(pagamento.getNumeroRate());
 
         if (pagamento.getFattura() == null || pagamento.getFattura().isEmpty()) {
             pagamento.setFattura("FATTURA-" + pagamentoId.toString());
@@ -258,52 +197,6 @@ public class PagamentoService {
 
         return pagamentoAggiornato;
     }//effettuaPagamento
-
-    public Pagamento pagaRata(UUID pagamentoId) {
-        log.info("Pagamento di una rata per pagamento id: {}", pagamentoId);
-
-        ControlliUtils.controlloIdValido(pagamentoId, "Pagamento");
-
-        Pagamento pagamento = pagamentoRepo.findById(pagamentoId)
-                .orElseThrow(() -> new EntitaNonTrovataException(ErroreCodice.PAGAMENTO_NON_TROVATO));
-
-        if (Boolean.TRUE.equals(pagamento.getPagamentoEffettuato())) {
-            log.error("Pagamento già completato: {}", pagamentoId);
-            throw new ValoreNonValidoException(
-                    "Pagamento già completato",
-                    ErroreCodice.PAGAMENTO_GIA_EFFETTUATO
-            );
-        }
-
-        Integer rataCorrente = pagamento.getRataCorrente();
-        Integer numeroRate = pagamento.getNumeroRate();
-
-        if (rataCorrente >= numeroRate) {
-            log.error("Non ci sono più rate da pagare per il pagamento: {}", pagamentoId);
-            throw new ValoreNonValidoException(
-                    "Tutte le rate sono già state pagate",
-                    ErroreCodice.PAGAMENTO_GIA_EFFETTUATO
-            );
-        }
-
-        rataCorrente += 1;
-        pagamento.setRataCorrente(rataCorrente);
-
-        if (rataCorrente.equals(numeroRate)) {
-            pagamento.setPagamentoEffettuato(true);
-            log.info("Pagamento completato per pagamento id: {}", pagamentoId);
-        }
-        pagamento.setDataPagamento(LocalDateTime.now());
-
-        if (pagamento.getFattura() == null || pagamento.getFattura().isEmpty()) {
-            pagamento.setFattura("FATTURA-" + pagamentoId.toString());
-        }
-        Pagamento pagamentoAggiornato = pagamentoRepo.save(pagamento);
-
-        log.info("Rata pagata con successo. Rata corrente: {}/{}", rataCorrente, numeroRate);
-
-        return pagamentoAggiornato;
-    }// pagaRata
 
     // ===== CONTROLLI =====
 
@@ -330,13 +223,6 @@ public class PagamentoService {
             return false;
         return importo.compareTo(BigDecimal.ZERO) >= 0;
     }//controlloImporto
-
-    private boolean controlloImportoRata(BigDecimal importoRata) {
-        if (importoRata == null)
-            return false;
-
-        return importoRata.compareTo(BigDecimal.ZERO) >= 0;
-    }//controlloImportoRata
 
     private boolean controlloDataPagamento(LocalDateTime dataPagamento) {
         if (dataPagamento == null)

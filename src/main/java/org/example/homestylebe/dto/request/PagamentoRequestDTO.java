@@ -13,19 +13,13 @@ public class PagamentoRequestDTO {
 
     private UUID ordineId;
 
-    private UUID modalitaPagamentoId;
+    private Boolean pagamentoOnline;
 
     private UUID cartaPagamentoId; // opzionale
 
     private Boolean pagamentoEffettuato;
 
-    private Integer numeroRate;
-
-    private Integer rataCorrente;
-
     private BigDecimal importo;
-
-    private BigDecimal importoRata;
 
     private LocalDateTime dataPagamento;
 

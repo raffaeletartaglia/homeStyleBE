@@ -137,6 +137,22 @@ public class OrdineController {
     }
 
     /**
+     * Crea un nuovo ordine per un singolo prodotto senza svuotare il carrello.
+     */
+    @PostMapping("/utente/{idUtente}/singolo")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<OrdineResponseDTO> creaOrdineSingolo(
+            @PathVariable UUID idUtente,
+            @RequestParam UUID idIndirizzoSpedizione,
+            @RequestParam UUID idProdotto,
+            @RequestParam int quantita) {
+
+        return ResponseEntity.ok(
+                ordineMapper.toDTO(ordineService.creaOrdineSingolo(idUtente, idIndirizzoSpedizione, idProdotto, quantita))
+        );
+    }
+
+    /**
      * Modifica l'indirizzo di spedizione di un ordine.
      * Nota: l'operazione è concessa solo se l'ordine è in stato IN_ELABORAZIONE.
      *

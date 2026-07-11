@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  keycloak-db:
+    image: postgres:16
+    container_name: homestyle-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5433:5432"        # DB accessibile da host su localhost:5433
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    depends_on:
+      - keycloak-db
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: admin
+
+      KC_HEALTH_ENABLED: "true"
+    # --import-realm: importa automaticamente i file .json dalla cartella /opt/keycloak/data/import/
+    command: ["start-dev", "--http-port", "8081", "--import-realm"]
+    volumes:
+      # Monta il file di configurazione del realm nella cartella di import di Keycloak
+      - ./keycloak/home_style-realm.json:/opt/keycloak/data/import/home_style-realm.json:ro
+    ports:
+      - "8081:8081"        # Keycloak su http://localhost:8081
+    restart: unless-stopped
+
+volumes:
+  keycloak-db-data:

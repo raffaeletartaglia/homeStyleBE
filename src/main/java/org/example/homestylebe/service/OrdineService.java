@@ -138,7 +138,7 @@ public class OrdineService {
         // Carrello attivo
         log.info("Cerco il carrello attivo dell'utente con id: {}", idUtente);
         Carrello carrello = carrelloRepository
-                .findByUtente_IdAndStato(idUtente, Carrello.Stato.ATTIVO)
+                .findByUtente_Id(idUtente)
                 .orElseThrow(() -> {
                     log.error("Nessun carrello attivo trovato per l'utente con id: {}", idUtente);
                     return new EntitaNonTrovataException(ErroreCodice.CARRELLO_NON_TROVATO);
@@ -232,10 +232,101 @@ public class OrdineService {
 
         // Aggiorna carrello
         log.info("Aggiornamento carrello con id: {}", carrello.getId());
-        carrello.setStato(Carrello.Stato.CONVERTITO);
+
         carrello.getProdotti().clear();
         carrelloRepository.save(carrello);
         log.info("Modifiche del carrello con id: {}, avvenute con successo", carrello.getId());
+
+        return ordineSalvato;
+    }
+
+    @Transactional
+    public Ordine creaOrdineSingolo(UUID paramIdUtente, UUID idIndirizzo, UUID idProdotto, int quantita) {
+        final UUID idUtente = resolveUtenteId(paramIdUtente);
+        log.info("Inizio a creare l'ordine singolo per l'utente con id: {}, spedito all'indirizzo con id: {}",
+                idUtente, idIndirizzo);
+
+        ControlliUtils.controlloIdValido(idUtente, "utente");
+        ControlliUtils.controlloIdValido(idIndirizzo, "indirizzo");
+        ControlliUtils.controlloIdValido(idProdotto, "prodotto");
+
+        // Utente
+        log.info("Cerco l'utente con id: {}", idUtente);
+        Utente utente = utenteRepository.findById(idUtente).orElseThrow(
+                () -> {
+                    log.error("Utente con id: {}, non trovato", idUtente);
+                    return new EntitaNonTrovataException(ErroreCodice.UTENTE_NON_TROVATO);
+                }
+        );
+        log.info("Trovato utente con id: {}", idUtente);
+
+        // Prodotto
+        log.info("Cerco il prodotto con id: {}", idProdotto);
+        Prodotto prodotto = prodottoRepository.findById(idProdotto).orElseThrow(
+                () -> {
+                    log.error("Prodotto con id: {}, non trovato", idProdotto);
+                    return new EntitaNonTrovataException(ErroreCodice.PRODOTTO_NON_TROVATO);
+                }
+        );
+
+        // Verifica disponibilità
+        log.info("Verifico disponibilità per ordine singolo");
+        if (quantita > prodotto.getGiacenza()) {
+            log.error("Disponibilità insufficiente per prodotto id: {}. Disponibile: {}, richiesto: {}",
+                    prodotto.getId(), prodotto.getGiacenza(), quantita);
+            throw new ValoreNonValidoException(
+                    "Disponibilità insufficiente per il prodotto", ErroreCodice.PRODOTTO_STOCK_INSUFFICIENTE
+            );
+        }
+        log.info("Verifica disponibilità terminata con successo");
+
+        // Indirizzo
+        log.info("Ricerca indirizzo di spedizione id: {}", idIndirizzo);
+        Indirizzo indirizzo = indirizzoRepository.findById(idIndirizzo).orElseThrow(
+                () -> {
+                    log.error("Indirizzo con id: {}, non trovato", idIndirizzo);
+                    return new EntitaNonTrovataException(ErroreCodice.INDIRIZZO_NON_TROVATO);
+                }
+        );
+        log.info("Indirizzo con id: {}, trovato con successo", idIndirizzo);
+
+        // Ordine
+        log.info("Creazione ordine singolo");
+        Ordine ordine = new Ordine();
+        ordine.setUtente(utente);
+        ordine.setStatoOrdine(Ordine.StatoOrdine.IN_ELABORAZIONE);
+        ordine.setIndirizzoSpedizione(indirizzo);
+        log.info("Ordine creato (non ancora salvato)");
+
+        // Dettagli ordine + aggiornamento magazzino + calcolo totale
+        log.info("Creazione dettagli ordine, aggiornamento magazzino e calcolo totale");
+        List<DettaglioOrdine> dettagli = new ArrayList<>();
+
+        DettaglioOrdine dettaglio = new DettaglioOrdine();
+        dettaglio.setOrdine(ordine);
+        dettaglio.setProdotto(prodotto);
+        dettaglio.setQuantita(quantita);
+        dettaglio.setPrezzoUnitario(prodotto.getPrezzo());
+        dettagli.add(dettaglio);
+
+        prodotto.setGiacenza(prodotto.getGiacenza() - quantita);
+        BigDecimal totale = prodotto.getPrezzo().multiply(BigDecimal.valueOf(quantita));
+
+        ordine.setDettagliOrdine(dettagli);
+        ordine.setPrezzoTotale(totale);
+        log.info("Dettagli ordine creati con successo, totale ordine: {}", totale);
+
+        // Salva ordine
+        log.info("Salvataggio ordine singolo");
+        Ordine ordineSalvato = ordineRepository.save(ordine);
+        log.info("Ordine salvato con successo, idOrdine: {}", ordineSalvato.getId());
+
+        // Aggiorna prodotti a magazzino
+        log.info("Aggiornamento prodotti e magazzino");
+        prodottoRepository.save(prodotto);
+        log.info("Prodotti e magazzino aggiornati con successo");
+
+        // NON SVUOTIAMO IL CARRELLO IN QUESTO CASO!
 
         return ordineSalvato;
     }

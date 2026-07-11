@@ -12,17 +12,11 @@ public class PagamentoResponseDTO {
 
     private UUID ordineId;
 
-    private ModalitaPagamentoResponseDTO modalitaPagamento;
+    private Boolean pagamentoOnline;
 
     private Boolean pagamentoEffettuato;
 
-    private Integer numeroRate;
-
-    private Integer rataCorrente;
-
     private BigDecimal importo;
-
-    private BigDecimal importoRata;
 
     private LocalDateTime dataPagamento;
 

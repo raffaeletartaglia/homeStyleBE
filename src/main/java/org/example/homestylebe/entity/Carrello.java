@@ -19,12 +19,7 @@ import java.util.UUID;
 @Table(name = "carrello")
 public class Carrello {
 
-    public enum Stato {
-        ATTIVO,
-        CONVERTITO,
-        ABBANDONATO
-    }//Stato
-
+    // Rimosso enum Stato
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
@@ -44,10 +39,7 @@ public class Carrello {
         this.dataCreazione = LocalDateTime.now();
     }
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "stato", nullable = false)
-    private Stato stato;
-    
+
  // Carrello -> CarrelloProdotto 1:n
     @OneToMany(mappedBy = "carrello", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CarrelloProdotto> prodotti = new ArrayList<>();

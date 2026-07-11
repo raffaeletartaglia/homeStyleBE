@@ -19,6 +19,17 @@ spring:
         jwt:
           jwk-set-uri: ${KEYCLOAK_JWK_URI}
 
+  logging:
+    level:
+      root: INFO
+      org.springframework.web: INFO
+      org.springframework.security: ERROR
+      org.hibernate: ERROR
+      com.homestyle.demo: DEBUG
+
+    pattern:
+      console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n"
+
 app:
   security:
     public-paths: /api/v1/categorie/**,/api/v1/stanza/**,/api/v1/prodotto/**,/actuator/health,/v3/api-docs/**,/swagger-ui/**

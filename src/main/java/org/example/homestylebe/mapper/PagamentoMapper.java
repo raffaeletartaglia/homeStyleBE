@@ -13,7 +13,6 @@ public interface PagamentoMapper {
     PagamentoResponseDTO toDTO(Pagamento entity);
     List<PagamentoResponseDTO> toDTOs(List<Pagamento> entities);
     @org.mapstruct.Mapping(target = "ordine.id", source = "ordineId")
-    @org.mapstruct.Mapping(target = "modalitaPagamento.id", source = "modalitaPagamentoId")
     @org.mapstruct.Mapping(target = "cartaPagamento.id", source = "cartaPagamentoId")
     Pagamento toEntity(PagamentoRequestDTO request);
 

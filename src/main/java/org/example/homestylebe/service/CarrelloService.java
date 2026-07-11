@@ -5,7 +5,7 @@ import org.example.homestylebe.entity.Carrello;
 import org.example.homestylebe.entity.CarrelloProdotto;
 import org.example.homestylebe.entity.Prodotto;
 import org.example.homestylebe.entity.Utente;
-import org.example.homestylebe.repository.CarrelloProdottoRepository;
+
 import org.example.homestylebe.repository.CarrelloRepository;
 import org.example.homestylebe.repository.ProdottoRepository;
 import org.example.homestylebe.repository.UtenteRepository;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.homestylebe.utils.ControlliUtils;
 
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -76,7 +76,7 @@ public class CarrelloService {
 
         ControlliUtils.controlloIdValido(idUtente, "utente");
 
-        Carrello carrelloTrovato = carrelloRepo.findByUtente_IdAndStato(idUtente, Carrello.Stato.ATTIVO).orElseGet(
+        Carrello carrelloTrovato = carrelloRepo.findByUtente_Id(idUtente).orElseGet(
                 () -> {
                     log.info("Nessun carrello attivo trovato per l'utente con id: {}, procedo alla creazione automatica", idUtente);
                     return creaCarrello(idUtente);
@@ -111,8 +111,7 @@ public class CarrelloService {
 
         // Cerca carrello attivo, se non esiste lo crea implicitamente
         UUID finalIdUtente = idUtente;
-        Carrello carrello = carrelloRepo
-                .findByUtente_IdAndStato(idUtente, Carrello.Stato.ATTIVO)
+        Carrello carrello = carrelloRepo.findByUtente_Id(idUtente)
                 .orElseGet(() -> {
                     log.info("Nessun carrello attivo, ne creo uno per utente id: {}", finalIdUtente);
                     return creaCarrello(finalIdUtente); // metodo privato
@@ -177,8 +176,8 @@ public class CarrelloService {
                 });
 
         // 2. Ha già un carrello attivo?
-        if (carrelloRepo.existsByUtente_IdAndStato(idUtente, Carrello.Stato.ATTIVO)) {
-            log.error("Utente id: {} ha già un carrello attivo", idUtente);
+        if (carrelloRepo.existsByUtente_Id(idUtente)) {
+            log.error("Utente id: {} ha già un carrello", idUtente);
             throw new ValoreNonValidoException(
                     "Esiste già un carrello attivo per questo utente",
                     ErroreCodice.CARRELLO_GIA_ESISTENTE_PER_UTENTE
@@ -188,7 +187,6 @@ public class CarrelloService {
         // 3. Crea e salva
         Carrello nuovoCarrello = new Carrello();
         nuovoCarrello.setUtente(utente);
-        nuovoCarrello.setStato(Carrello.Stato.ATTIVO);
 
         Carrello salvato = carrelloRepo.save(nuovoCarrello);
         log.info("Carrello id: {} creato per utente id: {}", salvato.getId(), idUtente);
