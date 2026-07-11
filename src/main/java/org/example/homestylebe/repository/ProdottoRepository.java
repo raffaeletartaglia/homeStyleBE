@@ -43,15 +43,22 @@ public interface ProdottoRepository extends JpaRepository<Prodotto, UUID> {
     Page<Prodotto> findByCategoriaId(@Param("categoriaId") UUID categoriaId, Pageable pageable);
 
     // Filtra prodotti per stanzaId (paginato) - naviga la relazione categoria -> stanze
-    @Query("SELECT DISTINCT p FROM Prodotto p JOIN p.categoria c JOIN c.stanze s WHERE s.id = :stanzaId")
+    @Query(value = "SELECT DISTINCT p FROM Prodotto p JOIN FETCH p.categoria c JOIN c.stanze s WHERE s.id = :stanzaId",
+           countQuery = "SELECT COUNT(DISTINCT p) FROM Prodotto p JOIN p.categoria c JOIN c.stanze s WHERE s.id = :stanzaId")
     Page<Prodotto> findByStanzaId(@Param("stanzaId") UUID stanzaId, Pageable pageable);
 
     // Filtra prodotti per stanzaId + categoriaId (paginato)
-    @Query("SELECT DISTINCT p FROM Prodotto p JOIN p.categoria c JOIN c.stanze s WHERE s.id = :stanzaId AND c.id = :categoriaId")
+    @Query(value = "SELECT DISTINCT p FROM Prodotto p JOIN FETCH p.categoria c JOIN c.stanze s WHERE s.id = :stanzaId AND c.id = :categoriaId",
+           countQuery = "SELECT COUNT(DISTINCT p) FROM Prodotto p JOIN p.categoria c JOIN c.stanze s WHERE s.id = :stanzaId AND c.id = :categoriaId")
     Page<Prodotto> findByStanzaIdAndCategoriaId(@Param("stanzaId") UUID stanzaId, @Param("categoriaId") UUID categoriaId, Pageable pageable);
 
     // Ricerca full-text paginata
-    @Query("SELECT DISTINCT p FROM Prodotto p LEFT JOIN p.categoria c LEFT JOIN c.stanze s " +
+    @Query(value = "SELECT DISTINCT p FROM Prodotto p LEFT JOIN FETCH p.categoria c LEFT JOIN c.stanze s " +
+           "WHERE LOWER(p.nomeProdotto) LIKE :query " +
+           "OR LOWER(p.marca) LIKE :query " +
+           "OR LOWER(c.nomeCategoria) LIKE :query " +
+           "OR LOWER(CAST(s.tipologia AS String)) LIKE :query",
+           countQuery = "SELECT COUNT(DISTINCT p) FROM Prodotto p LEFT JOIN p.categoria c LEFT JOIN c.stanze s " +
            "WHERE LOWER(p.nomeProdotto) LIKE :query " +
            "OR LOWER(p.marca) LIKE :query " +
            "OR LOWER(c.nomeCategoria) LIKE :query " +

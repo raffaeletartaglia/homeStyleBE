@@ -54,4 +54,15 @@ public class UtenteController {
     public ResponseEntity<UtenteResponseDTO> getProfilo() {
         return ResponseEntity.ok(utenteMapper.toDTO(utenteService.getFromLoggedUser()));
     }
+
+    /**
+     * Elimina il profilo dell'utente autenticato sia dal database locale che da Keycloak.
+     *
+     * @return ResponseEntity vuota
+     */
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> eliminaProfilo() {
+        utenteService.eliminaProfilo();
+        return ResponseEntity.noContent().build();
+    }
 }// UtenteController

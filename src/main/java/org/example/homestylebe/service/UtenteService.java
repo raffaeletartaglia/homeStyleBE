@@ -17,12 +17,16 @@ import org.example.homestylebe.repository.UtenteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.keycloak.admin.client.Keycloak;
+import jakarta.ws.rs.core.Response;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UtenteService {
 
     private final UtenteRepository utenteRepo;
+    private final Keycloak keycloak;
 
     /**
      * Recupera il profilo dell'utente autenticato a partire dal SecurityContext.
@@ -105,6 +109,35 @@ public class UtenteService {
 
         log.info("Utente creato/trovato.");
         return utenteRepo.save(utenteTrovatoOCreato);
+    }
+
+    public void eliminaProfilo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new UtenteException(ErroreCodice.UTENTE_NON_TROVATO, "Utente non autenticato o token JWT assente");
+        }
+
+        String keycloakId = jwt.getSubject();
+        
+        // 1. Find user in local DB
+        Utente utente = utenteRepo.findUtenteByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UtenteException(ErroreCodice.UTENTE_NON_TROVATO, "Utente non trovato nel database"));
+                
+        log.info("Eliminazione utente dal database locale con ID: {}", utente.getId());
+        
+        // 2. Delete from local DB (cascades to orders, wishlist, etc.)
+        utenteRepo.delete(utente);
+        
+        // 3. Delete from Keycloak
+        try {
+            log.info("Eliminazione utente da Keycloak con ID: {}", keycloakId);
+            String targetRealm = "home_style"; // Since the Realm is usually hardcoded or passed
+            keycloak.realm(targetRealm).users().get(keycloakId).remove();
+            log.info("Utente eliminato da Keycloak con successo.");
+        } catch (Exception e) {
+            log.error("Errore durante l'eliminazione dell'utente da Keycloak", e);
+            throw new RuntimeException("Impossibile eliminare l'utente da Keycloak: " + e.getMessage());
+        }
     }
 
 }// UtenteService

@@ -12,6 +12,7 @@ import org.example.homestylebe.entity.Prodotto;
 public interface ProdottoMapper {
     ProdottoResponseDTO toDTO(Prodotto entity);
     List<ProdottoResponseDTO> toDTOs(List<Prodotto> entities);
+    @org.mapstruct.Mapping(source = "categoriaId", target = "categoria.id")
     Prodotto toEntity(ProdottoRequestDTO request);
     List<Prodotto> toEntities(List<ProdottoRequestDTO> requests);
 
