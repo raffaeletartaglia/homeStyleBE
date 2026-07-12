@@ -25,11 +25,10 @@ public class Carrello {
     @Column(name = "id")
     private UUID id;
 
-    //1:1 con Utente
+    // 1:1 con Utente
     @OneToOne
     @JoinColumn(name = "utente_id", nullable = false)
     private Utente utente;
-
 
     @Column(name = "data_creazione", updatable = false)
     private LocalDateTime dataCreazione;
@@ -39,9 +38,8 @@ public class Carrello {
         this.dataCreazione = LocalDateTime.now();
     }
 
-
- // Carrello -> CarrelloProdotto 1:n
+    // Carrello -> CarrelloProdotto 1:n
     @OneToMany(mappedBy = "carrello", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CarrelloProdotto> prodotti = new ArrayList<>();
-    
-}//Carrello
+
+}// Carrello

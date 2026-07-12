@@ -30,6 +30,7 @@ public class OrdineService {
     private final CarrelloRepository carrelloRepository;
     private final ProdottoRepository prodottoRepository;
     private final IndirizzoRepository indirizzoRepository;
+    private final MovimentoMagazzinoRepository movimentoMagazzinoRepository;
 
     private UUID resolveUtenteId(UUID idUtente) {
         return utenteRepository.findUtenteByKeycloakId(idUtente.toString())
@@ -420,28 +421,26 @@ public class OrdineService {
         log.info("Ordine con id: {}, trovato", idOrdine);
 
         log.info("Controllo stato ordine");
-        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.ANNULLATO) {
-            log.error("Impossibile annullare un ordine già ANNULLATO");
-            throw new OrdineGiaAnnullatoException();
-        }
-        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.CONSEGNATO) {
-            log.error("Impossibile annullare un ordine già CONSEGNATO");
-            throw new OrdineGiaConsegnatoException();
+        if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE) {
+            log.error("Impossibile annullare un ordine che non è in elaborazione (stato attuale: {})", ordine.getStatoOrdine());
+            throw new ValoreNonValidoException("L'ordine può essere annullato solo se è IN_ELABORAZIONE", ErroreCodice.ORDINE_STATO_NON_VALIDO);
         }
         log.info("Controllo stato ordine superato, procedo con il ripristino magazzino");
 
-        // FIX BUG 5: ripristino giacenza (stock reale) invece di quantitaRiordinoStandard
         for (DettaglioOrdine det : ordine.getDettagliOrdine()) {
             Prodotto p = det.getProdotto();
             p.setGiacenza(p.getGiacenza() + det.getQuantita());
+            prodottoRepository.save(p);
+            
+            MovimentoMagazzino movimento = new MovimentoMagazzino();
+            movimento.setProdotto(p);
+            movimento.setQuantita(det.getQuantita());
+            movimento.setTipoMovimento(MovimentoMagazzino.TipoMovimento.ANNULLAMENTO_ORDINE);
+            movimento.setOrdine(ordine);
+            movimento.setNote("Ripristino per annullamento ordine");
+            movimentoMagazzinoRepository.save(movimento);
         }
-        prodottoRepository.saveAll(
-                ordine.getDettagliOrdine()
-                        .stream()
-                        .map(DettaglioOrdine::getProdotto)
-                        .toList()
-        );
-        log.info("Modifica magazzino avvenuta con successo");
+        log.info("Modifica magazzino e movimenti avvenuta con successo");
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.ANNULLATO);
 
