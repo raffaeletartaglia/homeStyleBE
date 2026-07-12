@@ -62,20 +62,25 @@ public class OrdineController {
 
     /**
      * Restituisce lo storico completo degli ordini effettuati da un determinato utente in formato paginato.
+     * Supporta filtri opzionali per stato spedizione e stato reso.
      *
      * @param idUtente L'identificativo dell'utente.
+     * @param statoSpedizione Lo stato della spedizione (opzionale).
+     * @param statoReso Lo stato del reso (opzionale).
      * @return Una pagina di DTO rappresentanti gli ordini dell'utente.
      */
     @GetMapping("/utente/{idUtente}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Page<OrdineResponseDTO>> getOrdiniPerUtente(
             @PathVariable UUID idUtente,
+            @RequestParam(required = false) String statoSpedizione,
+            @RequestParam(required = false) String statoReso,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("dataOrdine").descending());
         return ResponseEntity.ok(
-                ordineService.trovaOrdiniPerIdUtente(idUtente, pageable).map(ordineMapper::toDTO)
+                ordineService.trovaOrdiniPerIdUtente(idUtente, statoSpedizione, statoReso, pageable).map(ordineMapper::toDTO)
         );
     }
 

@@ -56,9 +56,9 @@ public class OrdineService {
     }
 
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<Ordine> trovaOrdiniPerIdUtente(UUID paramIdUtente, org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<Ordine> trovaOrdiniPerIdUtente(UUID paramIdUtente, String statoSpedizione, String statoReso, org.springframework.data.domain.Pageable pageable) {
         final UUID idUtente = resolveUtenteId(paramIdUtente);
-        log.info("Recupero ordini per l'utente con id: {}", idUtente);
+        log.info("Recupero ordini per l'utente con id: {} con filtri statoSpedizione={} e statoReso={}", idUtente, statoSpedizione, statoReso);
 
         ControlliUtils.controlloIdValido(idUtente, "utente");
 
@@ -67,7 +67,35 @@ public class OrdineService {
             throw new EntitaNonTrovataException(ErroreCodice.UTENTE_NON_TROVATO);
         }
 
-        org.springframework.data.domain.Page<Ordine> ordiniTrovati = ordineRepository.findByUtente_Id(idUtente, pageable);
+        Ordine.StatoOrdine so = null;
+        if (statoSpedizione != null && !statoSpedizione.equals("TUTTI") && !statoSpedizione.isEmpty()) {
+            try {
+                so = Ordine.StatoOrdine.valueOf(statoSpedizione);
+            } catch (IllegalArgumentException e) {
+                // ignore or handle
+            }
+        }
+
+        String srStr = null;
+        org.example.homestylebe.entity.Reso.StatoReso srEnum = null;
+        if (statoReso != null && !statoReso.equals("TUTTI") && !statoReso.isEmpty()) {
+            srStr = statoReso;
+            if (!statoReso.equals("NESSUNO")) {
+                try {
+                    srEnum = org.example.homestylebe.entity.Reso.StatoReso.valueOf(statoReso);
+                } catch (IllegalArgumentException e) {
+                    // ignore
+                }
+            }
+        }
+
+        org.springframework.data.domain.Page<Ordine> ordiniTrovati;
+        if (so == null && srStr == null) {
+            ordiniTrovati = ordineRepository.findByUtente_Id(idUtente, pageable);
+        } else {
+            ordiniTrovati = ordineRepository.findOrdiniFiltrati(idUtente, so, srStr, srEnum, pageable);
+        }
+
         if (ordiniTrovati.isEmpty()) {
             log.warn("Nessun ordine trovato per l'utente con id: {}", idUtente);
         } else {
