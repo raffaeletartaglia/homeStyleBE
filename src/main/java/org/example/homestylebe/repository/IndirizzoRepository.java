@@ -11,17 +11,12 @@ import java.util.UUID;
 public interface IndirizzoRepository extends JpaRepository<Indirizzo, UUID> {
 	
 	// Trova tutti gli indirizzi di un utente
-    List<Indirizzo> findByUtente(Utente utente);
+    List<Indirizzo> findByUtenteAndIsDeletedFalse(Utente utente);
 
     // Trova tutti gli indirizzi di un utente filtrando per tipo
-    List<Indirizzo> findByUtenteAndTipo(Utente utente, Indirizzo.Tipo tipo);
+    List<Indirizzo> findByUtenteAndTipoAndIsDeletedFalse(Utente utente, Indirizzo.Tipo tipo);
 
     // Trova tutti gli indirizzi di un tipo specifico
-    List<Indirizzo> findByTipo(Indirizzo.Tipo tipo);
+    List<Indirizzo> findByTipoAndIsDeletedFalse(Indirizzo.Tipo tipo);
 
-    // Elimina un indirizzo in base all'id di un utente
-    void deleteByUtente(Utente utente);
-
-    // Elimina tutti gli indirizzi di un utente
-    void deleteAllByUtente(Utente utente);
 }//IndirizzoRepository

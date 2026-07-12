@@ -58,13 +58,16 @@ public class Indirizzo {
 
 	@Column(name = "is_default")
 	private boolean isDefault;
+
+	@Column(name = "is_deleted", nullable = false, columnDefinition = "boolean default false")
+	private boolean isDeleted = false;
 	
 	//RELAZIONE
 	//indirizzo->Ordine(1:n)
-	@OneToMany(mappedBy = "indirizzoSpedizione", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "indirizzoSpedizione")
 	private List<Ordine> ordini = new ArrayList<>();
 	
-	@OneToMany(mappedBy = "indirizzoReso", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "indirizzoReso")
 	private List<Reso> resi = new ArrayList<>();
 
 }//Indirizzo

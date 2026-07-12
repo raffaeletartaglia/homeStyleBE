@@ -97,7 +97,7 @@ public class IndirizzoService {
                     return new EntitaNonTrovataException(ErroreCodice.UTENTE_NON_TROVATO);
                 });
 
-        List<Indirizzo> indirizziUtente = inidirizziRepo.findByUtente(utente);
+        List<Indirizzo> indirizziUtente = inidirizziRepo.findByUtenteAndIsDeletedFalse(utente);
 
         log.info("Indirizzi dell'utente con id: {}, trovati", idUtente);
         return indirizziUtente;
@@ -125,7 +125,7 @@ public class IndirizzoService {
                     return new EntitaNonTrovataException(ErroreCodice.UTENTE_NON_TROVATO);
                 });
 
-        List<Indirizzo> indirizzi = inidirizziRepo.findByUtenteAndTipo(utenteTrovato, tipo);
+        List<Indirizzo> indirizzi = inidirizziRepo.findByUtenteAndTipoAndIsDeletedFalse(utenteTrovato, tipo);
 
         log.info("Trovati {} indirizzi di tipo: {} per l'utente con id: {}", indirizzi.size(), tipo, idUtente);
         return indirizzi;
@@ -303,8 +303,10 @@ public class IndirizzoService {
             throw new EntitaNonTrovataException(ErroreCodice.INDIRIZZO_NON_VALIDO);
         }
 
-        inidirizziRepo.deleteById(idIndirizzo);
-        log.info("Indirizzo con id: {} dell'utente: {}, eliminato con successo", idIndirizzo, idUtente);
+        indirizzoTrovato.setDeleted(true);
+        indirizzoTrovato.setDefault(false);
+        inidirizziRepo.save(indirizzoTrovato);
+        log.info("Indirizzo con id: {} dell'utente: {}, eliminato (soft delete) con successo", idIndirizzo, idUtente);
     }// eliminaGliIndirizziDiUnUtente
 
     /**
@@ -326,8 +328,14 @@ public class IndirizzoService {
         Utente utenteTrovato = utenteRepository.findById(idUtente)
                 .orElseThrow(() -> new EntitaNonTrovataException(ErroreCodice.UTENTE_NON_TROVATO));
 
-        inidirizziRepo.deleteByUtente(utenteTrovato);
-        log.info("Indirizzi dell'utente: {}, eliminati con successo", idUtente);
+        List<Indirizzo> indirizzi = inidirizziRepo.findByUtenteAndIsDeletedFalse(utenteTrovato);
+        for (Indirizzo ind : indirizzi) {
+            ind.setDeleted(true);
+            ind.setDefault(false);
+        }
+        inidirizziRepo.saveAll(indirizzi);
+        
+        log.info("Indirizzi dell'utente: {}, eliminati (soft delete) con successo", idUtente);
     }// eliminaTuttiGliIndirizziDiUnUtente
 
     /**
@@ -356,7 +364,7 @@ public class IndirizzoService {
     }// generaIndirizzo
 
     private void impostaAltriIndirizziComeNonDefault(Utente utente, UUID idIndirizzoEscluso) {
-        List<Indirizzo> indirizziUtente = inidirizziRepo.findByUtente(utente);
+        List<Indirizzo> indirizziUtente = inidirizziRepo.findByUtenteAndIsDeletedFalse(utente);
         for (Indirizzo ind : indirizziUtente) {
             if (ind.isDefault() && !ind.getId().equals(idIndirizzoEscluso)) {
                 ind.setDefault(false);
