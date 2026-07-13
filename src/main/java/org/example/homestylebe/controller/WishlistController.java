@@ -1,8 +1,11 @@
 package org.example.homestylebe.controller;
 
 import org.example.homestylebe.dto.response.WishlistResponseDTO;
+import org.example.homestylebe.dto.response.ProdottoResponseDTO;
+import org.example.homestylebe.dto.response.ProdottoSuggerimentoDTO;
 import org.example.homestylebe.entity.Wishlist;
 import org.example.homestylebe.mapper.WishlistMapper;
+import org.example.homestylebe.mapper.ProdottoMapper;
 import org.example.homestylebe.service.WishlistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 public class WishlistController {
 
     private final WishlistMapper wishlistMapper;
+    private final ProdottoMapper prodottoMapper;
     private final WishlistService wishlistService;
 
     @GetMapping("/utente/{idUtente}")
@@ -63,5 +67,25 @@ public class WishlistController {
     public ResponseEntity<Void> svuotaWishlistPerUtente(@PathVariable UUID idUtente) {
         wishlistService.svuotaWishlistPerUtente(idUtente);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/utente/{idUtente}/ricerca-suggerimenti")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<List<ProdottoSuggerimentoDTO>> ricercaSuggerimentiWishlist(
+            @PathVariable UUID idUtente,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) UUID categoriaId) {
+        return ResponseEntity.ok(wishlistService.ricercaSuggerimentiWishlist(idUtente, query, categoriaId));
+    }
+
+    @GetMapping("/utente/{idUtente}/ricerca")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public ResponseEntity<List<ProdottoResponseDTO>> ricercaProdottiWishlist(
+            @PathVariable UUID idUtente,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) UUID categoriaId) {
+        
+        List<org.example.homestylebe.entity.Prodotto> prodotti = wishlistService.ricercaProdottiWishlist(idUtente, query, categoriaId);
+        return ResponseEntity.ok(prodottoMapper.toDTOs(prodotti));
     }
 }

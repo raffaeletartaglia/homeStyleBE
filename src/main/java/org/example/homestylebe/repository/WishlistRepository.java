@@ -19,5 +19,13 @@ public interface WishlistRepository extends JpaRepository<Wishlist, UUID> {
     Optional<Wishlist> findByUtente_Id(UUID utenteId);
 
     void deleteByUtente_Id(UUID utenteId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p FROM Wishlist w JOIN w.prodotti p LEFT JOIN p.categoria c " +
+           "WHERE w.utente.id = :utenteId " +
+           "AND (:query IS NULL OR :query = '' OR LOWER(p.nomeProdotto) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND (:categoriaId IS NULL OR c.id = :categoriaId)")
+    List<Prodotto> ricercaProdottiInWishlist(@org.springframework.data.repository.query.Param("utenteId") UUID utenteId, 
+                                             @org.springframework.data.repository.query.Param("query") String query, 
+                                             @org.springframework.data.repository.query.Param("categoriaId") UUID categoriaId);
     
 }//WishlistRepository

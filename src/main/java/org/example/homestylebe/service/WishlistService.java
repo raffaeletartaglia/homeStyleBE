@@ -111,6 +111,33 @@ public class WishlistService {
             log.info("Wishlist svuotata per utente id: {}", idUtente);
         });
     }
+
+    @Transactional(readOnly = true)
+    public List<org.example.homestylebe.dto.response.ProdottoSuggerimentoDTO> ricercaSuggerimentiWishlist(UUID paramIdUtente, String query, UUID categoriaId) {
+        final UUID idUtente = resolveUtenteId(paramIdUtente);
+        log.info("Ricerca suggerimenti wishlist per utente id: {} con query: {} e categoria: {}", idUtente, query, categoriaId);
+        ControlliUtils.controlloIdValido(idUtente, "utente");
+
+        String likeQuery = (query != null && !query.trim().isEmpty()) ? "%" + query.trim().toLowerCase() + "%" : null;
+        List<Prodotto> prodotti = wishlistRepository.ricercaProdottiInWishlist(idUtente, likeQuery, categoriaId);
+        
+        return prodotti.stream().map(p -> {
+            org.example.homestylebe.dto.response.ProdottoSuggerimentoDTO dto = new org.example.homestylebe.dto.response.ProdottoSuggerimentoDTO();
+            dto.setId(p.getId());
+            dto.setNomeProdotto(p.getNomeProdotto());
+            return dto;
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Prodotto> ricercaProdottiWishlist(UUID paramIdUtente, String query, UUID categoriaId) {
+        final UUID idUtente = resolveUtenteId(paramIdUtente);
+        log.info("Ricerca prodotti wishlist per utente id: {} con query: {} e categoria: {}", idUtente, query, categoriaId);
+        ControlliUtils.controlloIdValido(idUtente, "utente");
+
+        String likeQuery = (query != null && !query.trim().isEmpty()) ? "%" + query.trim().toLowerCase() + "%" : null;
+        return wishlistRepository.ricercaProdottiInWishlist(idUtente, likeQuery, categoriaId);
+    }
 }
 
 
