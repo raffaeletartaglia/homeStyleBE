@@ -23,9 +23,8 @@ public class Stanza {
     @Column(name = "id")
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "tipologia", unique = true, nullable = false)
-    private AreaCasa tipologia;
+    private String tipologia;
 
     @ManyToMany(mappedBy = "stanze")
     private List<Categoria> categorie = new ArrayList<>();

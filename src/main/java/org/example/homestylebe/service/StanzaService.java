@@ -42,14 +42,9 @@ public class StanzaService {
             throw new CampoNullException("Stanza null");
         }
 
-        if (stanza.getTipologia() == null) {
-            log.error("Tipologia stanza null");
-            throw new CampoNullException("Campo tipologia null");
-        }
-
-        if (!stanza.getTipologia().isAreaCasa(stanza.getTipologia())) {
-            log.error("Tipologia stanza non valida");
-            throw new CampoNullException("Campo tipologia non valido");
+        if (stanza.getTipologia() == null || stanza.getTipologia().trim().isEmpty()) {
+            log.error("Tipologia stanza null o vuota");
+            throw new CampoNullException("Campo tipologia null o vuoto");
         }
 
         if (stanzaRepo.existsByTipologia(stanza.getTipologia())) {
@@ -116,9 +111,9 @@ public class StanzaService {
             throw new CampoNullException("Stanza null");
         }
 
-        if (stanza.getTipologia() == null) {
-            log.error("Tipologia stanza null");
-            throw new CampoNullException("Campo tipologia null");
+        if (stanza.getTipologia() == null || stanza.getTipologia().trim().isEmpty()) {
+            log.error("Tipologia stanza null o vuota");
+            throw new CampoNullException("Campo tipologia null o vuoto");
         }
 
         Stanza vecchiaStanza = stanzaRepo.findById(id).orElseThrow(() -> new CampoNullException("Stanza non trovata"));

@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import org.example.homestylebe.entity.AreaCasa;
+
 import org.example.homestylebe.entity.Stanza;
 
 import java.util.Optional;
@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface StanzaRepository extends JpaRepository<Stanza, UUID> {
 
-    boolean existsByTipologia(AreaCasa tipologia);
+    boolean existsByTipologia(String tipologia);
 
-    Optional<Stanza> findByTipologia(AreaCasa tipologia);
+    Optional<Stanza> findByTipologia(String tipologia);
 }

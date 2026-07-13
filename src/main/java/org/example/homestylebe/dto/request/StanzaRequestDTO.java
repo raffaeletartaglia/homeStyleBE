@@ -1,12 +1,11 @@
 package org.example.homestylebe.dto.request;
 
 import lombok.Data;
-
-import org.example.homestylebe.entity.AreaCasa;
-
+import jakarta.validation.constraints.NotBlank;
 @Data
 public class StanzaRequestDTO {
 
-    private AreaCasa tipologia;
+    @NotBlank(message = "La tipologia è obbligatoria")
+    private String tipologia;
 
 }
