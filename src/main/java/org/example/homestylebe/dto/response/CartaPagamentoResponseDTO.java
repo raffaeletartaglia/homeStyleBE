@@ -1,5 +1,6 @@
 package org.example.homestylebe.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class CartaPagamentoResponseDTO {
 
     private LocalDate scadenza;
 
+    @JsonProperty("isDefault")
     private boolean isDefault;
 
 }//CartaPagamentoResponseDTO

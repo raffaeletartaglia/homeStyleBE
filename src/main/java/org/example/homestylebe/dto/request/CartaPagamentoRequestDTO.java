@@ -1,5 +1,6 @@
 package org.example.homestylebe.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -28,6 +29,7 @@ public class CartaPagamentoRequestDTO {
 
     private TipoCarta tipoCarta;
 
+    @JsonProperty("isDefault")
     private boolean isDefault;
 
 }// CartaPagamentoRequestDTO

@@ -32,7 +32,7 @@ services:
     command: ["start-dev", "--http-port", "8081", "--import-realm"]
     volumes:
       # Monta il file di configurazione del realm nella cartella di import di Keycloak
-      - ./keycloak/home_style-realm.json:/opt/keycloak/data/import/home_style-realm.json:ro
+      - ./home_style-realm.json:/opt/keycloak/data/import/home_style-realm.json:ro
     ports:
       - "8081:8081"        # Keycloak su http://localhost:8081
     restart: unless-stopped

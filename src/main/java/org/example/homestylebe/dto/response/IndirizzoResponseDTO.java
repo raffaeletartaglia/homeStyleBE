@@ -1,5 +1,6 @@
 package org.example.homestylebe.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.util.UUID;
 
@@ -32,6 +33,7 @@ public class IndirizzoResponseDTO {
 
     private TipoIndirizzo tipo;
 
+    @JsonProperty("isDefault")
     private boolean isDefault;
 
 }//IndirizzoResponseDTO

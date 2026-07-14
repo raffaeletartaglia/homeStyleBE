@@ -1,5 +1,6 @@
 package org.example.homestylebe.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.util.UUID;
 import org.example.homestylebe.entity.Indirizzo;
@@ -33,6 +34,7 @@ public class IndirizzoRequestDTO {
     @NotBlank(message = "Il tipo di indirizzo non può essere nullo")
     private Indirizzo.Tipo tipo;
 
+    @JsonProperty("isDefault")
     private boolean isDefault;
 
 }// IndirizzoRequestDTO
