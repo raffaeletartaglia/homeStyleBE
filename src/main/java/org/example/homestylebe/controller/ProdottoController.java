@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.example.homestylebe.exception.ErroreCodice;
+import org.example.homestylebe.exception.ValoreNonValidoException;
 import org.springframework.data.domain.Pageable;
 
 /**
@@ -71,7 +73,7 @@ public class ProdottoController {
         public ResponseEntity<Page<ProdottoResponseDTO>> getAllProdotti(
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                Pageable pageable = paginaRichiesta(page, size);
                 return ResponseEntity.ok(
                                 prodottoService.getAllProdotti(pageable).map(prodottoMapper::toDTO));
         }
@@ -142,10 +144,18 @@ public class ProdottoController {
                         @RequestParam(required = false) String query,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "12") int size) {
-                Pageable pageable = PageRequest.of(page, size);
+                Pageable pageable = paginaRichiesta(page, size);
                 return ResponseEntity.ok(
                                 prodottoService.getProdottiFiltrati(stanzaId, categoriaId, query, pageable)
                                                 .map(prodottoMapper::toDTO));
+        }
+
+        private Pageable paginaRichiesta(int page, int size) {
+                if (page < 0 || size < 1) {
+                        throw new ValoreNonValidoException("Pagina o dimensione non valida",
+                                        ErroreCodice.ERRORE_VALIDAZIONE);
+                }
+                return PageRequest.of(page, size);
         }
 
 }

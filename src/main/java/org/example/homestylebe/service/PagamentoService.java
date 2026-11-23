@@ -57,6 +57,10 @@ public class PagamentoService {
                         .findById(pagamento.getCartaPagamento().getId())
                         .orElseThrow(() -> new EntitaNonTrovataException(ErroreCodice.CARTA_PAGAMENTO_NON_TROVATA));
 
+                if (!ordine.getUtente().getId().equals(cartaPagamento.getUtente().getId())) {
+                    throw new ValoreNonValidoException("Carta non disponibile per l'utente",
+                            ErroreCodice.CARTA_PAGAMENTO_NON_VALIDA);
+                }
                 pagamento.setCartaPagamento(cartaPagamento);
                 log.info("Carta pagamento trovata e associata: {}", cartaPagamento.getId());
             } else {

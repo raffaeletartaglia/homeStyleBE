@@ -102,14 +102,6 @@ public class RecensioneService {
 
 		List<Recensione> recensioni = recensioneRepo.findByDettaglioOrdineProdotto_Id(prodottoId);
 
-		if (recensioni.isEmpty()) {
-			log.error("Nessuna recensione trovata per il prodotto {}", prodottoId);
-			throw new ValoreNonValidoException(
-					"Lista recensioni vuota",
-					ErroreCodice.RECENSIONE_NON_TROVATA
-			);
-		}
-
 		log.info("Trovate {} recensioni per prodottoId={}", recensioni.size(), prodottoId);
 
 		return recensioni;

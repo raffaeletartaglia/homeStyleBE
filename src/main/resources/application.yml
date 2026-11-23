@@ -17,7 +17,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${KEYCLOAK_JWK_URI}
+          jwk-set-uri: ${KEYCLOAK_JWK_URI:http://localhost:8081/realms/home_style/protocol/openid-connect/certs}
 
   logging:
     level:

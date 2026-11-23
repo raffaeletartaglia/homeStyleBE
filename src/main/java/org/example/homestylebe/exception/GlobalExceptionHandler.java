@@ -3,8 +3,12 @@ package org.example.homestylebe.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 
@@ -99,6 +103,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(erroreCodice.getHttpStatus())
                 .body(body);
+    }
+
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class, MethodArgumentNotValidException.class})
+    public ResponseEntity<ApiErrorResponse> handleInvalidRequest(Exception ex, HttpServletRequest request) {
+        return handleBusinessException(new ValoreNonValidoException(
+                "Parametri o corpo della richiesta non validi", ErroreCodice.ERRORE_VALIDAZIONE), request);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(HttpServletRequest request) {
+        return ResponseEntity.status(403).body(ApiErrorResponse.builder()
+                .codiceErrore("ACCESSO_NEGATO")
+                .messaggio("Accesso negato")
+                .timestamp(LocalDateTime.now())
+                .path(request.getRequestURI())
+                .build());
     }
 
     @ExceptionHandler(Exception.class)

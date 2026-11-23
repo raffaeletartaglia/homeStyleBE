@@ -31,6 +31,33 @@ public class OrdineService {
     private final ProdottoRepository prodottoRepository;
     private final IndirizzoRepository indirizzoRepository;
     private final MovimentoMagazzinoRepository movimentoMagazzinoRepository;
+    private final PagamentoService pagamentoService;
+
+    @Transactional
+    public Ordine checkout(UUID utenteId, UUID indirizzoId, UUID prodottoId, int quantita,
+                          boolean pagamentoOnline, UUID cartaPagamentoId) {
+        ControlliUtils.controlloIdValido(indirizzoId, "indirizzo");
+        Ordine ordine = prodottoId == null
+                ? creaOrdine(utenteId, indirizzoId)
+                : creaOrdineSingolo(utenteId, indirizzoId, prodottoId, quantita);
+        Indirizzo indirizzo = ordine.getIndirizzoSpedizione();
+        if (indirizzo.isDeleted() || !ordine.getUtente().getId().equals(indirizzo.getUtente().getId())) {
+            throw new ValoreNonValidoException("Indirizzo non disponibile per l'utente",
+                    ErroreCodice.INDIRIZZO_NON_VALIDO);
+        }
+
+        Pagamento pagamento = new Pagamento();
+        pagamento.setOrdine(ordine);
+        pagamento.setImporto(ordine.getPrezzoTotale());
+        pagamento.setPagamentoOnline(pagamentoOnline);
+        if (pagamentoOnline && cartaPagamentoId != null) {
+            CartaPagamento carta = new CartaPagamento();
+            carta.setId(cartaPagamentoId);
+            pagamento.setCartaPagamento(carta);
+        }
+        ordine.setPagamento(pagamentoService.creaPagamento(pagamento));
+        return ordine;
+    }
 
     private UUID resolveUtenteId(UUID idUtente) {
         return utenteRepository.findUtenteByKeycloakId(idUtente.toString())
@@ -271,6 +298,10 @@ public class OrdineService {
 
     @Transactional
     public Ordine creaOrdineSingolo(UUID paramIdUtente, UUID idIndirizzo, UUID idProdotto, int quantita) {
+        if (quantita <= 0) {
+            throw new ValoreNonValidoException("La quantità deve essere maggiore di zero",
+                    ErroreCodice.CARRELLO_PRODOTTO_QUANTITA_NON_VALIDA);
+        }
         final UUID idUtente = resolveUtenteId(paramIdUtente);
         log.info("Inizio a creare l'ordine singolo per l'utente con id: {}, spedito all'indirizzo con id: {}",
                 idUtente, idIndirizzo);

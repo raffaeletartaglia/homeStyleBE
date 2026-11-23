@@ -7,6 +7,8 @@ import org.example.homestylebe.service.OrdineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +30,17 @@ public class OrdineController {
 
     private final OrdineService ordineService;
     private final OrdineMapper ordineMapper;
+
+    public record CheckoutRequest(UUID indirizzoId, UUID prodottoId, int quantita,
+                                  boolean pagamentoOnline, UUID cartaPagamentoId) {}
+
+    @PostMapping("/checkout")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public OrdineResponseDTO checkout(@AuthenticationPrincipal Jwt jwt, @RequestBody CheckoutRequest request) {
+        return ordineMapper.toDTO(ordineService.checkout(UUID.fromString(jwt.getSubject()),
+                request.indirizzoId(), request.prodottoId(), request.quantita(),
+                request.pagamentoOnline(), request.cartaPagamentoId()));
+    }
 
     /**
      * Recupera tutti gli ordini presenti a sistema (senza filtri).
